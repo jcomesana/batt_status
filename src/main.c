@@ -3,7 +3,9 @@
  */
 
 #include <fcntl.h>
+#include <i2c/smbus.h>
 #include <linux/i2c-dev.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/ioctl.h>
@@ -31,6 +33,13 @@ int main()
         close(file);
         exit(1);
     }
+
+    u_int8_t reg = REG_PERCENTAGE;
+    int32_t batt_value = i2c_smbus_read_word_data(file, reg);
+    reg = REG_CHARGE;
+    int32_t charge_value = i2c_smbus_read_word_data(file, reg);
+    bool charging = charge_value & 0x40;
+    printf("%02d%%%c\n", batt_value, charging? '+': '\0');
     close(file);
     printf("Done!\n");
 }
