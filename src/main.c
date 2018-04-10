@@ -16,6 +16,7 @@
 #define DATA_ADDRESS 0x34
 #define REG_PERCENTAGE 0xb9
 #define REG_CHARGE 0x01
+#define REG_ADC 0x82
 
 
 /**
@@ -36,7 +37,7 @@ int get_batt_status(batt_status *status);
 
 int main()
 {
-    batt_status status;
+    batt_status status = {0, false};
     if (!get_batt_status(&status)) {
         printf("%02d%%%s\n", status.percentage, status.charging? "+": "");
     } else {
@@ -62,12 +63,11 @@ int get_batt_status(batt_status *status)
         return 1;
     }
 
-    u_int8_t reg = REG_PERCENTAGE;
-    int32_t value = i2c_smbus_read_word_data(file, reg);
-    status->percentage = value;
-    reg = REG_CHARGE;
-    value = i2c_smbus_read_word_data(file, reg);
-    status->charging = value & 0x40;
+    /* Enable the ADC for voltage and current */
+    i2c_smbus_write_byte_data(file, REG_ADC, 0xC3);
+
+    status->percentage = i2c_smbus_read_byte_data(file, REG_PERCENTAGE);
+    status->charging = i2c_smbus_read_byte_data(file, REG_CHARGE) & 0x40;
     close(file);
     return 0;
 }
