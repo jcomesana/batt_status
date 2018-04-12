@@ -28,6 +28,7 @@ typedef struct _batt_status
     bool charging;
 } batt_status;
 
+
 /**
  * Leaves in status the current values.
  * Returns a non-zero value in case of error.
@@ -49,8 +50,8 @@ int main()
 
 int get_batt_status(batt_status *status)
 {
+    const char *file_name = "/dev/i2c-0";
     int file;
-    char *file_name = "/dev/i2c-0";
 
     if ((file = open(file_name, O_RDWR)) < 0) {
         perror("Opening the device");
@@ -63,10 +64,11 @@ int get_batt_status(batt_status *status)
         return 1;
     }
 
-    /* Enable the ADC for voltage and current */
-    i2c_smbus_write_byte_data(file, REG_ADC, 0xC3);
-
     status->percentage = i2c_smbus_read_byte_data(file, REG_PERCENTAGE);
+    if (status->percentage == 0xFF) {
+        /* Value not initialized, enable the ADC for voltage and current */
+        i2c_smbus_write_byte_data(file, REG_ADC, 0xC3);
+    }
     status->charging = i2c_smbus_read_byte_data(file, REG_CHARGE) & 0x40;
     close(file);
     return 0;
