@@ -65,7 +65,7 @@ int get_batt_status(batt_status *status)
     }
 
     status->percentage = i2c_smbus_read_byte_data(file, REG_PERCENTAGE);
-    if (status->percentage == 0xFF) {
+    if (status->percentage == 0x7F) {
         /* Value not initialized, enable the ADC for voltage and current */
         i2c_smbus_write_byte_data(file, REG_ADC, 0xC3);
     }
