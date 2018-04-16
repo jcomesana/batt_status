@@ -17,6 +17,8 @@
 #define REG_PERCENTAGE 0xb9
 #define REG_CHARGE 0x01
 #define REG_ADC 0x82
+#define UNINITIALIZED_VALUE 0x7F
+#define ENABLE_ADC 0xC3
 
 
 /**
@@ -65,9 +67,9 @@ int get_batt_status(batt_status *status)
     }
 
     status->percentage = i2c_smbus_read_byte_data(file, REG_PERCENTAGE);
-    if (status->percentage == 0x7F) {
+    if (status->percentage == UNINITIALIZED_VALUE) {
         /* Value not initialized, enable the ADC for voltage and current */
-        i2c_smbus_write_byte_data(file, REG_ADC, 0xC3);
+        i2c_smbus_write_byte_data(file, REG_ADC, ENABLE_ADC);
     }
     status->charging = i2c_smbus_read_byte_data(file, REG_CHARGE) & 0x40;
     close(file);
